@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Haskell</title>
+    <link rel="stylesheet" href="styles/sass/haskellcats.css">
+    <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
+    <script src="modals.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main-navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <img src="badlogo.svg" width="168" height="42">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+        <div class="navbar-start">
+
+            <a class="navbar-item" href="cats.html">
+                Find a Haskell
+            </a>
+
+            <a class="navbar-item" href="cat_record.html">
+                Records
+            </a>
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    Veterinarian
+                </a>
+
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="appointments.html">
+                        Schedule Appointment
+                    </a>
+                    <a class="navbar-item" href="veterinarian.html">
+                        For Veterinarians Only
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    <a class="button is-primary">
+                        <strong>Login</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Haskell</h1>
+        <div class="card">
+            <div class="card-image">
+                <figure class="image is-fluid">
+                    <img src="https://cdn.discordapp.com/attachments/805875050778853406/1130346066869489664/IMG_3182.jpg" alt="Haskell">
+                </figure>
+            </div>
+            <div class="card-content">
+                <div class="content">
+                    <p>Longform description about me goes here.</p>
+
+                    <p class="subtitle">My Characteristics</p>
+                    <strong>Weight: </strong> 50kg <br>
+                    <strong>Age: </strong> 100 years old <br>
+                    <strong>Added: </strong> 07/20/2002 <br>
+                    <strong>Medications: </strong>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Medication Name</th>
+                                <th>Mfr</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Promethazine m. Copeime</th>
+                                <th>Shkreli Pharmazeutische GmbH</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <strong>Diseases: </strong> <br>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Disease Name</th>
+                            <th>About this Disease</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th>Rabies</th>
+                            <th>Prion disease</th>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button class="button is-primary js-modal-trigger" data-target="adoptmodal">
+                        <strong>ADOPT HASKELL NOW</strong>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal" id="adoptmodal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Begin Adoption</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <h1 class="title">About you</h1>
+            </div>
+            <div class="field">
+                <label class="field-label">First Name</label>
+                <div class="field-body">
+                    <input class="input" type="text" placeholder="Simon">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Last Name</label>
+                <div class="field-body">
+                    <input class="input" type="text" placeholder="Peyton Jones">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Address</label>
+                <div class="field-body">
+                    <textarea class="textarea has-fixed-size" placeholder="" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Phone Number</label>
+                <div class="field-body">
+                    <input class="input" type="tel" placeholder="">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Email</label>
+                <div class="field-body">
+                    <input class="input" type="email" placeholder="">
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot">
+            <div class="field is-grouped">
+                <p class="control">
+                    <a class="button is-primary">
+                        Adopt
+                    </a>
+                </p>
+                <div class="field has-addons">
+                    <p class="control">
+                        <input class="input" type="text" placeholder="Have a member ID?">
+                    </p>
+                    <p class="control">
+                        <a class="button">
+                            Populate
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

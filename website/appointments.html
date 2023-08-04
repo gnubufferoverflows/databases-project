@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Haskell</title>
+    <link rel="stylesheet" href="styles/sass/haskellcats.css">
+    <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
+    <script src="modals.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="styles/node_modules/bulma-calendar/dist/js/bulma-calendar.min.js"></script>
+</head>
+<body>
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main-navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <img src="badlogo.svg" width="168" height="42">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+        <div class="navbar-start">
+
+            <a class="navbar-item" href="cats.html">
+                Find a Haskell
+            </a>
+
+            <a class="navbar-item" href="cat_record.html">
+                Records
+            </a>
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    Veterinarian
+                </a>
+
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="appointments.html">
+                        Schedule Appointment
+                    </a>
+                    <a class="navbar-item" href="veterinarian.html">
+                        For Veterinarians Only
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    <a class="button is-primary">
+                        <strong>Login</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="section">
+    <br>
+    <h1 class="title">Schedule Appointment</h1>
+    <h1 class="subtitle">With the vet</h1>
+
+    <div class="field">
+        <label class="label">Which cat?</label>
+        <div class="field has-addons">
+            <p class="control">
+                <input class="input" type="text" placeholder="Enter cat ID">
+            </p>
+            <p class="control">
+                <a class="button">
+                    Verify
+                </a>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <label class="label">Please select your preferred veterinarian</label>
+        <div class="field">
+            <p class="control">
+                <div class="select">
+                    <select>
+                        <option>Janie R. Nielsen</option>
+                        <option>Rosa K. Akbar</option>
+                        <option>Phyllis J. Berryman</option>
+                    </select>
+                </div>
+            </p>
+        </div>
+    </div>
+
+    <article class="message is-primary">
+        <div class="message-header">
+            <p>Please Note</p>
+        </div>
+        <div class="message-body">
+            Our veterinary team is hard at our work treating Haskells, and we may not always be able to get your preferred veterinarian.
+        </div>
+    </article>
+
+    <div class="field">
+        <label class="label">How long?</label>
+        <div class="field">
+            <p class="control">
+            <div class="select">
+                <select>
+                    <option>Ten Minutes</option>
+                    <option>Thirty Minutes</option>
+                    <option>One Hour</option>
+                </select>
+            </div>
+            </p>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label">How can we help your Haskell?</label>
+        <div class="field">
+            <p class="control">
+            <textarea class="textarea" rows="5"></textarea>
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <label class="label">Appointment Date</label>
+        <div class="field">
+            <p class="control">
+                <input class="input bulmaCalendar" type="datetime">
+            </p>
+        </div>
+    </div>
+    <div class="field">
+        <p class="control">
+            <button class="button is-primary">Submit</button>
+        </p>
+    </div>
+</section>
+
+<script>
+    // Initialize all input of type date
+    var calendars = bulmaCalendar.attach(".bulmaCalendar");
+
+    // Loop on each calendar initialized
+    for(var i = 0; i < calendars.length; i++) {
+        // Add listener to select event
+        calendars[i].on('select', date => {
+            console.log(date);
+        });
+    }
+</script>
+</body>
+</html>

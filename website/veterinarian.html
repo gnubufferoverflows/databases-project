@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Haskell Vet Page</title>
+    <link rel="stylesheet" href="styles/sass/haskellcats.css">
+    <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
+    <script src="modals.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main-navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <img src="badlogo.svg" width="168" height="42">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+        <div class="navbar-start">
+
+            <a class="navbar-item" href="cats.html">
+                Find a Haskell
+            </a>
+
+            <a class="navbar-item" href="cat_record.html">
+                Records
+            </a>
+
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    Veterinarian
+                </a>
+
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="appointments.html">
+                        Schedule Appointment
+                    </a>
+                    <a class="navbar-item" href="veterinarian.html">
+                        For Veterinarians Only
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="buttons">
+                    <a class="button is-primary">
+                        <strong>Login</strong>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="section">
+    <br>
+    <h1 class="title">
+        Current Staff
+    </h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Hired</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Janie R. Nielsen</td>
+                <td>4996 Tree Top Lane; Coopersburg, PA 18036</td>
+                <td>610-282-6942</td>
+                <td>JanieRNielson@teleworm.us</td>
+                <td>2023-07-17</td>
+                <td><a class="js-modal-trigger" data-target="editstaff">Edit</a><br><a class="has-text-danger js-modal-trigger" data-target="deleteconfirm">Delete</a></td>
+            </tr>
+            <tr>
+                <td>Janie R. Nielsen</td>
+                <td>4996 Tree Top Lane; Coopersburg, PA 18036</td>
+                <td>610-282-6942</td>
+                <td>JanieRNielson@teleworm.us</td>
+                <td>2023-07-17</td>
+                <td><a class="js-modal-trigger" data-target="editstaff">Edit</a><br><a class="has-text-danger js-modal-trigger" data-target="deleteconfirm">Delete</a></td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="button is-primary js-modal-trigger" data-target="editstaff">New Record</button> <br>
+    <h1 class="title">
+        Current Appointments
+    </h1>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Cat</th>
+            <th>Veterinarian</th>
+            <th>Date and Time</th>
+            <th>Details</th>
+            <th>Private Notes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Haskell #1</td>
+            <td>John Cena</td>
+            <td>Today at 21:03</td>
+            <td>Cat has infection.</td>
+            <td>Why did John Cena adopt from us?</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h1 class="title">
+        Patients
+    </h1>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Cat</th>
+            <th>Description</th>
+            <th>Weight</th>
+            <th>Age</th>
+            <th>Registration Date</th>
+            <th>Owns</th>
+            <th>Rx</th>
+            <th>Diseases</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Haskell</td>
+            <td>#1</td>
+            <td>longhaired gray fur, green eyes</td>
+            <td>4 kg</td>
+            <td>7 years old</td>
+            <td>2023-07-17</td>
+            <td>Lucy M. Smith</td>
+            <td>Promethazine m. Copeime</td>
+            <td>Feline Leukemia: Diagnosed 09/11/2023</td>
+            <td><a class="js-modal-trigger" data-target="editcat">Edit</a><br><a class="has-text-danger js-modal-trigger" data-target="deleteconfirm">Delete</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <button class="button is-primary js-modal-trigger" data-target="editcat">New Record</button>
+
+</section>
+
+
+<div class="modal" id="editcat">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Cat Record</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <label class="field-label">Physical Description</label>
+                <div class="field-body">
+                    <textarea class="textarea" type="text" placeholder="Placeholder not implemented yet"></textarea>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Weight</label>
+                <div class="field-body">
+                    <input class="input" type="text" placeholder="">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Registration Date</label>
+                <div class="field-body">
+                    <input class="input" type="date">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Photo URL</label>
+                <div class="field-body">
+                    <input class="input" type="tel" placeholder="">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Add/remove medication</label>
+                <div class="select">
+                    <select>
+                        <option>Promethazine m. Copeime</option>
+                        <option>Tollwut Vakzine</option>
+                        <option>Chemotherapie</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Add/remove disease</label>
+                <div class="select">
+                    <select>
+                        <option>Feline Leukemia</option>
+                        <option>Rabies</option>
+                        <option>Hyperthyroidism</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot">
+            <div class="field is-grouped">
+                <p class="control">
+                    <a class="button is-success">
+                        Submit
+                    </a>
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<div class="modal" id="editstaff">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Staff Record</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <label class="field-label">Address</label>
+                <div class="field-body">
+                    <textarea class="textarea" type="text" placeholder="Placeholder not implemented yet"></textarea>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Name</label>
+                <div class="field-body">
+                    <input class="input" type="text" placeholder="">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Hired Date</label>
+                <div class="field-body">
+                    <input class="input" type="date">
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label">Phone Number</label>
+                <div class="field-body">
+                    <input class="input" type="tel" placeholder="">
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot">
+            <div class="field is-grouped">
+                <p class="control">
+                    <a class="button is-success">
+                        Submit
+                    </a>
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<div class="modal" id="deleteconfirm">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Delete Record</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <h1 class="title">Are you sure?</h1>
+        </section>
+        <footer class="modal-card-foot">
+            <div class="field is-grouped">
+                <p class="control">
+                    <a class="button is-danger">
+                        Permanently Delete
+                    </a>
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>
