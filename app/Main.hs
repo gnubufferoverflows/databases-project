@@ -26,6 +26,10 @@ printError = hPutStrLn stderr
 response200 :: ByteString -> Response
 response200 = responseBuilder status200 [("Content-Type", "text/plain")] . fromByteString 
 
+if' :: Bool -> a -> a -> a
+if' True  x _ = x
+if' False _ y = y
+
 argsParse' :: MaybeT IO Args
 argsParse' = do
   args <- lift getArgs
@@ -37,7 +41,13 @@ argsParse' = do
 
 app :: Application
 app req respond = do -- the points req and respond will probably be used later
-  results <- runTestQuery
+  let path = pathInfo req
+  let method = requestMethod req
+  if' (path == ["api", "cats"] && method == "GET") $ do
+      results <- runGetCatsQuery
+      respond $ response200 [i|#{results}|]
+  $ do
+  results <- runTestQuery 
   respond $ response200 [i|The output is: #{results}|]
 
 main :: IO ()
