@@ -64,7 +64,7 @@ executable databases
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.18.0.0, string-interpolate, warp, transformers, wai, http-types, binary, bytestring, mysql-simple, aeson
+    build-depends:    base ^>=4.18.0.0, string-interpolate, warp, transformers, wai, http-types, binary, bytestring, mysql-simple, aeson, time, text, base64-bytestring
 
     -- Directories containing source files.
     hs-source-dirs:   app
