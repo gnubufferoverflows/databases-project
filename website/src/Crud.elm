@@ -2,6 +2,9 @@ module Crud exposing (Model(..), Msg(..), main, Column, Endpoint, CellView(..))
 
 
 import Browser
+import Html exposing (Html)
+import Html.Attributes as Attrs exposing (class, id, classList, Attribute)
+import Html.Events
 import Http
 import Json.Decode as Dec exposing (Decoder)
 import Json.Encode as Enc exposing (Value)
@@ -16,49 +19,70 @@ type Model a
 
 
 type alias PartialModel a =
-    { subqueries : Dict String (List String)
+    { subqueries : Subqueries
     , data : Maybe (Dict Int a)
     , subqueriesToFulfill : Int
     }
 
 
+type alias Subqueries =
+    Dict String (Dict Int String)
+
+
 type alias State a =
-    { subqueries : Dict String (List String) -- a list of string-keyed subquery results for enumerated table cells
+    { subqueries : Subqueries -- a list of string-keyed subquery results for enumerated table cells
     , data : Dict Int a -- the collection of entities operated upon
-    , modifying : Modifying a -- the state of editing the entities
+    , modifying : Maybe Modifying -- the state of editing the entities
     }
 
 
 -- type to represent the state of modifying the page
 -- either we are not modifying anything, we are editing a particular entity,
 -- or we are creating a new entity
-type Modifying a
-    = NotModifying
-    | Editing Int Interface
+type Modifying
+    = Editing Int Interface
     | Creating Interface
+    | Deleting Int
 
 
 -- internal storage for user interface for creating and editing entities
 type alias Interface =
-    Dict String String
+    Dict String InputType
+
+
+type InputType
+    = Text Text
+    | DropDown (Dict Int String) (Maybe Int)
+
+
+type alias Text =
+    { textType : TextType
+    , value : String
+    }
+
+
+type TextType
+    = Date
+    | TextArea
+    | Input (String -> Maybe String)
 
 
 type Msg a
     -- Create
     = Create Value
     | BeginCreate
-    | EndCreate
     -- Read
     | GotData (Result Http.Error (Dict Int a))
-    | GotSubquery String (Result Http.Error (List String))
+    | GotSubquery String (Result Http.Error (Dict Int String))
     -- Update
     | Update Int Value
-    | BeginEdit a
-    | EndEdit
+    | BeginEdit Int a
     -- Delete
     | Delete Int
-    -- User input
-    | UpdateForm String String
+    | BeginDelete Int
+    -- Modal operations
+    | UpdateField String InputType
+    | CloseModal
     -- Server communication
     | Acked (Result Http.Error ())
     
@@ -70,13 +94,12 @@ type alias Endpoint =
 type alias Column a =
     { header : String -- the name of the column
     , view : CellView a -- the kind of view of the object that the column will provide
-    , parser : Maybe (String -> Maybe String) -- the parser, for editing values. if there is no parser (its value is Nothing), the value is not editable
     }
 
 
 type CellView a
-    = Projection (a -> String) -- a function from the object to a String representation of some aspect of it
-    | Subquery String -- a subquery key that will be looked up in the subquery dictionary
+    = Projection (a -> String) (Maybe TextType) -- a function from the object to a String representation of some aspect of it
+    | Subquery String (a -> Int) Bool -- a subquery key that will be looked up in the subquery dictionary
 
 
 -- unzipped dataview, for efficient access of necessary subcomponents
@@ -85,23 +108,28 @@ type CellView a
 type alias UnzippedColumns a
     { headers : List String
     , views : List (CellView a)
-    , parsers : List (Maybe (String -> Maybe String))
     }
 
 
+-- unzips a list of columns into a record with multiple lists for easier processing
 unzipColumns : List (Column a) -> UnzippedColumns a
 unzipColumns =
-        List.foldr dataViewCons emptyDataView
+    List.foldr dataViewCons emptyDataView
+
+
+zipColumns : UnzippedColumns a -> List (Column a)
+zipColumns {headers, views} =
+    List.map2 Column headers views
 
 
 columnCons : Column a -> UnzippedColumns a -> UnzippedColumns a
-columnCons {header, view, parser} {headers, views, parsers} =
-    {headers = header :: headers, views = view :: views, parsers = parser :: parsers}
+columnCons {header, view} {headers, views} =
+    {headers = header :: headers, views = view :: views}
 
 
 emptyUnzippedColumns : UnzippedColumns a
 emptyUnzippedColumns =
-    {headers = [], views = [], parsers = []}
+    {headers = [], views = []}
 
 
 type alias ReadEndpoints a =
@@ -146,6 +174,19 @@ fetchMainData endpoint decoder =
         }
 
 
+-- spins up all of the subqueries into a list of commands to be batched
+fetchSubqueries : Dict String Endpoint -> List (Cmd (Msg a))
+fetchSubqueries =
+    Dict.toList
+        >> List.map
+            ( \ ( key, endpoint ) ->
+                Html.get
+                    { url = endpoint
+                    , expect = Http.expectJson (GotSubquery key) <| decodeIntDict Dec.string
+                    }
+            )
+
+
 -- augments a decoder to be over the values of a dict from int to a
 decodeIntDict : Decoder a -> Decoder (Dict Int a)
 decodeIntDict decoder =
@@ -157,28 +198,15 @@ decodeIntDict decoder =
 mapFilterKeys : (k -> Maybe n) -> Dict k v -> Dict n v
 mapFilterKeys f =
     Dict.empty
-        |> Dict.foldl (
-            \ k v ->
+        |> Dict.foldl
+            ( \ k v ->
                 case f k of
                     Just n ->
                         Dict.insert n v
 
                     _ ->
                         identity
-        )
-
-
--- spins up all of the subqueries into a list of commands to be batched
-fetchSubqueries : Dict String Endpoint -> List (Cmd (Msg a))
-fetchSubqueries =
-    Dict.toList
-        >> List.map (
-            \ ( key, endpoint ) ->
-                Html.get
-                    { url = endpoint
-                    , expect = Http.expectJson (GotSubquery key) <| Dec.list Dec.string
-                    }
-        )
+            )
 
 
 type alias CrudEndpoints =
@@ -189,51 +217,157 @@ type alias CrudEndpoints =
     }
 
 
+-- main update loop
+-- what will we do when we get a new message?
 update :
-    { endpoints : CrudEndpoints }
+    { endpoints : CrudEndpoints
+    , columns : UnzippedColumns a
+    }
     -> Msg a
     -> Model a
     -> ( Model a, Cmd (Msg a) )
-update {endpoints} =
+update {endpoints, columns} msg model =
     case ( msg, model ) of
-        ( GotData result, PartiallyLoaded ({subqueries, subqueriesToFulfill} as partialData) ) ->
-            result
-                |> handleGetRequest (
-                    \ xs ->
-                        case subqueriesToFulfill of
-                            0 ->
-                                Running
-                                    { subqueries = subqueries
-                                    , data = xs
-                                    , modifying = NotModifying
-                                    }
+        -- CREATE
 
-                            _ ->
-                                PartiallyLoaded
-                                    {partialData | data = Just xs}
-                )
+        ( BeginCreate, Loaded ({subqueries} as state) ) ->
+            ( {state | modifying = Just <| Creating <| makeCreateInterface subqueries columns}, Cmd.none )
 
-        ( GotSubquery key result, PartiallyLoaded ({subqueries, data, subqueriesToFulfill} as partialData) ) ->
-            result
-                |> handleGetRequest (
-                    \ xs ->
-                        case ( data, subqueriesToFulfill ) of
-                            ( Just ys, 1 ) ->
-                                Running
-                                    { subqueries = Dict.insert key xs subqueries
-                                    , data = ys
-                                    , modifying = NotModifying
-                                    }
+        -- READ
 
-                            _ ->
-                                PartiallyLoaded
-                                    { partialData
-                                    | subqueries = Dict.insert key xs subqueries
-                                    , subqueriesToFulfill = subqueriesToFulfill - 1
-                                    }
-                )
+        -- we got the main data
+        ( GotData result, PartiallyLoaded partialData ) ->
+            result |> loadData partialData
+
+        -- we got the result from a subquery
+        ( GotSubquery key result, PartiallyLoaded partialData ) ->
+            result |> loadSubquery partialData key
+
+        -- UPDATE
+
+        -- we are beginning an edit
+        ( BeginEdit id object, Loaded ({subqueries} as state) ) ->
+            ( {state | modifying = Just <| Editing id <| makeEditInterface subqueries object columns}, Cmd.none)
+
+        -- DELETE
+
+        -- Modal operations
+        ( CloseModal, Loaded state ) ->
+            ( {state | modifying = Nothing}, Cmd.none )
+
+        -- Elm moment
+        _ ->
+            ( model, Cmd.none )
 
 
+type alias WritableColumn a =
+    ( String, WritableCellView a )
+
+
+type WritableCellView a
+    = WProjection (a -> String) TextType
+    | WSubquery String (a -> Int)
+
+
+makeCreateInterface : Subqueries -> UnzippedColumns a -> Interface
+makeCreateInterface subqueries =
+    zipColumns
+        >> filterMapToWritable
+        >> List.map (Tuple.mapSecond <| toEmptyInput subqueries)
+        >> Dict.fromList
+
+
+toEmptyInput : Subqueries -> WritableCellView a -> InputType
+toEmptyInput subqueries w =
+    case w of
+        WProjection _ tt ->
+            Text
+                { textType = tt
+                , value = ""
+                }
+
+        WSubquery key _ ->
+            DropDown (Dict.get key subqueries |> Maybe.withDefault Dict.empty) Nothing
+
+
+makeEditInterface : Subqueries -> a -> UnzippedColumns a -> Interface
+makeEditInterface subqueries object =
+    zipColumns
+        >> filterMapToWritable
+        >> List.map (Tuple.mapSecond <| populateEditInput subqueries object)
+        >> Dict.fromList
+
+
+populateEditInput : Subqueries -> a -> WritableCellView a -> InputType
+populateEditInput subqueries object w =
+    case w of
+        WProjection f tt ->
+            Text
+                { textType = tt
+                , value = f object
+                }
+
+        WSubquery key f ->
+            Just (f object)
+                |> DropDown (Dict.get key subqueries)
+
+
+filterMapToWritable : List (Column a) -> List (WritableColumn a)
+filterMapToWritable =
+    List.filterMap writableColumn
+
+
+writableColumn : Column a -> Maybe (WritableColumn a)
+writableColumn column =
+    case column.view of
+        Projection f (Just tt) ->
+            Just ( column.header, WProjection f tt )
+
+        Subquery key f True ->
+           Just ( column.header, WSubquery key f )
+
+        _ ->
+           Nothing 
+            
+
+loadData : PartialModel a -> Result Http.Error x -> ( Model a, Cmd (Msg a) )
+loadData ({subqueries, subqueriesToFulfill} as partialData) key =
+    handleGetRequest
+        <| \ xs ->
+            case subqueriesToFulfill of
+                0 ->
+                    Running
+                        { subqueries = subqueries
+                        , data = xs
+                        , modifying = Nothing
+                        }
+
+                _ ->
+                    PartiallyLoaded
+                        {partialData | data = Just xs}
+
+
+loadSubquery : PartialModel a -> String -> Result Http.Error x -> ( Model a, Cmd (Msg a) )
+loadSubquery ({subqueries, data, subqueriesToFulfill} as partialData) key =
+    handleGetRequest
+        <| \ xs ->
+            case ( data, subqueriesToFulfill ) of
+                ( Just ys, 1 ) ->
+                    Running
+                        { subqueries = Dict.insert key xs subqueries
+                        , data = ys
+                        , modifying = Nothing
+                        }
+
+                    _ ->
+                        PartiallyLoaded
+                            { partialData
+                            | subqueries = Dict.insert key xs subqueries
+                            , subqueriesToFulfill = subqueriesToFulfill - 1
+                            }
+
+
+-- function to handle http errors from get requests in this module in a concise way
 handleGetRequest :
     (x -> Model a)
     -> Result Http.Error x -- the result to handle
@@ -268,7 +402,178 @@ httpErrorToString error =
         BadBody x ->
             "Bad body: " ++ x ++ "."
 
-                        
+
+-- function to determine what we will render
+view : Decoder a -> UnzippedColumns a -> Model a -> Html (Msg a)
+view decoder {headers, views} model =
+    case model of
+        PartiallyLoaded _ ->
+            Html.p [] [Html.text "Loading"]
+
+        Error msg ->
+            Html.p [] [Html.text msg]
+
+        Running {subqueries, data, modifying} ->
+            Html.div []
+                [ creationButton
+                , makeTable headers views subqueries data
+                , Maybe.map makeModal modifying
+                    |> Maybe.withDefault emptyHtml
+                ]
+
+
+makeModal : Decoder a -> Modifying -> Html (Msg a)
+makeModal m =
+    case m of
+        Editing id interface ->
+            makeEditModal id interface
+        
+        Creating interface ->
+            makeCreateModal interface
+
+        Deleting id ->
+            makeDeleteModal id
+
+
+-- decoder may or may not be necessary
+makeEditModal : Decoder a -> Int -> Interface -> Html (Msg a)
+makeEditModal id interface =
+    modal
+        { header = "Editing"
+        , footer = "Submit"
+        , onSubmit = nuclearWaste interface <| Update id
+        , body = interfaceBody interface
+        }
+
+
+interfaceBody : Interface -> List (Html (Msg a))
+interfaceBody =
+    Dict.toList 
+        >> List.map
+            ( \ ( label, contents ) ->
+                Html.div [class "field"]
+                    [ Html.label [class "field-label"] [Html.text label]
+                    , Html.div [class "field-body"]
+                        [ case contents of
+                            Text {textType = Date, value} ->
+                                Html.input
+                                    [ Attrs.type_ "date"
+                                    , Attrs.value value
+                                    , Events.onInput <| UpdateField label -- needs to be modified
+                                    ]
+                                    []
+
+                            Text {textType = TextArea, value} ->
+                                Html.textArea
+                                    [ Attrs.value value
+                                    , Events.onInput <| UpdateField label
+                                    ]
+
+
+emptyHtml : Html msg
+emptyHtml =
+    Html.text ""
+
+
+creationButton : Html (Msg a)
+creationButton =
+    Html.button
+        [ class "button"
+        , class "is-primary"
+        , class "js-modal-trigger"
+        , Events.onClick BeginCreate
+        ]
+        []
+
+
+-- creates the main data table
+makeTable : List String -> List (a -> String) -> Subqueries -> Dict Int a -> Html (Msg a)
+makeTable headers views subqueries data =
+    Html.table [class "table"]
+        [ Html.thead []
+            <| List.map (wrapElement <| Html.th []) headers
+                ++ [Html.th [] [Html.text "Action"]]
+        , Html.tbody []
+            <| List.map (toRow views subqueries) (Dict.toList data)
+        ]
+
+
+-- converts a particular element into a row in the main data table
+toRow : List (CellView a) -> Subqueries -> ( Int, a ) -> List (Html (Msg a))
+toRow views subqueries ( id, object ) =
+    Html.tr []
+        <| List.map (wrapElement <| Html.td []) (projectWholeObject subqueries object views)
+            ++ [ Html.td []
+                    [ Html.a [class "js-modal-trigger", Events.onClick <| BeginEdit id object]
+                        [Html.text "Edit"]
+                    , Html.br [] []
+                    , Html.a [class "has-text-danger", class "js-modal-trigger"]
+                        [Html.text "Delete"]
+                    ]
+                ]
+
+
+projectWholeObject : Subqueries -> a -> List (CellView a) -> List String
+projectWholeObject subqueries object =
+    List.map <| projectObject subqueries object
+
+
+projectObject : Subqueries -> a -> CellView a -> String
+projectObject subqueries object cellview =
+    case cellView of
+        Projection f _ ->
+            f object
+
+        Subquery key f _ ->
+            Dict.get key subqueries
+                |> Maybe.andThen (Dict.get <| f object)
+                |> Maybe.withDefault ""
+
+
+
+wrapElement : (List (Html msg) -> Html msg) -> String -> Html msg
+wrapElement element =
+    Html.text >> List.singleton >> element
+
+
+type alias ModalOptions a =
+    { header : String
+    , body : List (Html (Msg a))
+    , footer : String
+    , onSubmit : Msg a
+    }
+
+
+modal : ModalOptions a ->  Html (Msg a)
+modal options =
+    Html.div
+        [ class "modal"
+        , class "is-active"    
+        ]
+        [ Html.div [class "modal-background", Events.onClick CloseModal] []
+        , Html.div [class "modal-card"]
+            [ Html.header [class "modal-card-head"]
+                [ Html.p [class "modal-card-title"] [Html.text options.header]
+                , Html.button [class "delete", ariaLabel "close", Events.onClick options.onClose] []
+                ]
+            , Html.section [class "modal-card-body"] body
+            , Html.footer [class "modal-card-foot"]
+                [ Html.div [class "field", class "is-grouped"]
+                    [ Html.p [class "control"]
+                        [ Html.a [class "button", class "is-danger", Events.onClick options.onSubmit]
+                            [Html.text options.footer]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+
+ariaLabel : String -> Attribute msg
+ariaLabel =
+    Html.Attributes.attribute "aria-label"
+
+
 subscriptions : Model a -> Sub msg
 subscriptions =
     always Sub.none
@@ -282,7 +587,6 @@ main :
     , subqueries : Dict String Endpoint
     , columns : List (Column a)
     , decoder : Decoder a
-    , pk : a -> Int
     }
     -> Program () (Model a) (Msg a)
-main {read, create, edit, delete, columns, decoder, pk} =
+main {read, create, edit, delete, columns, decoder} =
