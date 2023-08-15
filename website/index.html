@@ -2,22 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Haskell Cats</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/bulma-prefers-dark" />
+    <title>Haskell</title>
+    <link rel="stylesheet" href="styles/sass/haskellcats.css">
+    <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
+    <script src="modals.js"></script>
+    <script src="elm.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Haskell Cats HTML Pages:</h1>
-            <ul>
-                <li><a href="appointments.html">Appointments</a>: View and create appointments for Haskells.</li>
-                <li><a href="cat_record.html">View Cat Record</a>: See a Haskell and decide if you want to adopt them or not.</li>
-                <li><a href="cats.html">List Cats</a>: Show all cats.</li>
-                <li><a href="veterinarian.html">Veterinarian Page</a>: Modify prescription and disease information. View table of adoption records.</li>
-            </ul>
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main-navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <img src="badlogo.svg" width="168" height="42">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+        <div class="navbar-start">
+
+            <a class="navbar-item" href="index.html">
+                Find a Haskell
+            </a>
+
+            <a class="navbar-item" href="appointments.html">
+                Schedule Appointment
+            </a>
+
+            <a class="navbar-item" href="veterinarians.html">
+                &#x1F608; For Veterinarians Only &#x1F608;
+            </a>
         </div>
-    </section>
+
+        <div class="navbar-end">
+        </div>
+    </div>
+</nav>
+
+<section class="section">
+    <br>
+    <div id="catcards"></div>
+</section>
+<script>
+    const app = Elm.Index.init({
+        node: document.getElementById('catcards')
+    });
+</script>
 </body>
 </html>
