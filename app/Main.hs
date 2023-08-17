@@ -28,10 +28,6 @@ printError = hPutStrLn stderr
 response200 :: ByteString -> Response
 response200 = responseBuilder status200 [("Content-Type", "text/plain")] . fromByteString 
 
-if' :: Bool -> a -> a -> a
-if' True  x _ = x
-if' False _ y = y
-
 argsParse' :: MaybeT IO Args
 argsParse' = do
   args <- lift getArgs
@@ -46,6 +42,13 @@ app' port = scotty port $ do
     S.get "/" $ file "website/index.html"
     S.get "/api/cats" $ do
         results <- lift runGetCatsQuery
+        S.json $ results
+    S.get "/api/vets/partial" $ do
+        results <- lift getVetsQuery
+        S.json $ results
+    S.get "/api/cats/exists/:id" $ do
+        catid <- param "id"
+        results <- lift $ checkCatExistsQuery catid
         S.json $ results
 
 main :: IO ()
