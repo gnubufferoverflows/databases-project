@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Haskell</title>
+    <link rel="stylesheet" href="styles/sass/haskellcats.css">
+    <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
+    <script src="modals.js"></script>
+    <script src="cats.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main-navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="index.html">
+            <img src="badlogo.svg" width="168" height="42">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="main-navigation">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+        <div class="navbar-start">
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    &#x1F608; For Veterinarians Only &#x1F608;
+                </a>
+                <div class="navbar-dropdown">
+                    <a class="navbar-item" href="cats.html">
+                        Cat Database
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar-end">
+        </div>
+    </div>
+</nav>
+
+<section class="section">
+    <br>
+    <div id="catcards"></div>
+</section>
+<script>
+    const app = Elm.Pages.Cats.init({
+        node: document.getElementById('catcards')
+    });
+</script>
+</body>
+</html>
