@@ -3,17 +3,18 @@ elm-stuff
 elm.js
 dist-newstyle/
 website/styles/sass/*
-website/styles/css/base/*
-website/styles/css/bulma-prefers-dark-master/*
-website/styles/css/components/*
-website/styles/css/elements/*
-website/styles/css/form/*
-website/styles/css/grid/*
-website/styles/css/haskellcats.css
-website/styles/css/haskellcats.css.map
-website/styles/css/helpers/*
-website/styles/css/layout/*
-website/styles/css/utilities/*
+website/styles/sass/base/*
+website/styles/sass/bulma-prefers-dark-master/*
+website/styles/sass/components/*
+website/styles/sass/elements/*
+website/styles/sass/form/*
+website/styles/sass/grid/*
+website/styles/sass/haskellcats.css
+website/styles/sass/haskellcats.css.map
+website/styles/sass/helpers/*
+website/styles/sass/layout/*
+website/styles/sass/utilities/*
+website/styles/css/*
 
 
 
