@@ -17,6 +17,8 @@ import Network.Wai.Handler.Warp (run)
 import Data.Binary.Builder
 import Data.ByteString (ByteString)
 import Queries
+import Web.Scotty as S
+import Network.Wai.Middleware.Static
 
 type Args = Int -- for now
 
@@ -39,16 +41,12 @@ argsParse' = do
   guard $ port < 65535
   hoistMaybe $ Just port
 
-app :: Application
-app req respond = do -- the points req and respond will probably be used later
-  let path = pathInfo req
-  let method = requestMethod req
-  if' (path == ["api", "cats"] && method == "GET") $ do
-      results <- runGetCatsQuery
-      respond $ response200 [i|#{results}|]
-  $ do
-  results <- runTestQuery 
-  respond $ response200 [i|The output is: #{results}|]
+app' port = scotty port $ do
+    S.middleware $ staticPolicy (noDots >-> addBase "website/")
+    S.get "/" $ file "website/index.html"
+    S.get "/api/cats" $ do
+        results <- lift runGetCatsQuery
+        S.json $ results
 
 main :: IO ()
 main = do
@@ -56,6 +54,6 @@ main = do
   case arguments of
     Just port -> do
       putStrLn [i|Running on port #{port}.|]
-      run port app
+      app' port
     Nothing -> printError "Invalid input for port number."
 

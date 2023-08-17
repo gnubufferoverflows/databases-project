@@ -109,7 +109,7 @@ type alias WritableColumn a =
 -- unzipped dataview, for efficient access of necessary subcomponents
 -- this ensures that every list in the dataview is the same length,
 -- impossible to enforce otherwise
-type alias UnzippedColumns a
+type alias UnzippedColumns a =
     { headers : List String
     , views : List (CellView a)
     }
