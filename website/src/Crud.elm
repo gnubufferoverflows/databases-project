@@ -29,7 +29,16 @@
 -- The concept of the "topic object" is very important for this module. Essentially, all of these
 -- low-quality CRUD pages one can make with this module must revolve around one particular datatype.
 
-module Crud exposing (Model(..), Msg(..), main, Column, Endpoint, CellView(..))
+
+module Crud exposing
+    ( Model
+    , Msg
+    , app
+    , Column
+    , Endpoint
+    , CellView(..)
+    , TextType(..)
+    )
 
 
 import Browser
@@ -832,7 +841,7 @@ subscriptions =
 
 
 -- main function, and the primary export of this module
-main :
+app :
     { read : Endpoint
     , create : Endpoint
     , edit : Endpoint
@@ -843,7 +852,7 @@ main :
     , encoder : a -> Value
     }
     -> Program () (Model a) (Msg a)
-main {read, create, edit, delete, subqueries, columns, encoder, decoder} =
+app {read, create, edit, delete, subqueries, columns, encoder, decoder} =
     let
         unzippedColumns = unzipColumns columns
     in

@@ -1,7 +1,10 @@
 -- Evan's Elm Stdlib Extension
 
 
-module EESE exposing (filterMapKeys)
+module EESE exposing
+    ( filterMapKeys
+    , isJust
+    )
 
 
 import Dict exposing (Dict)
@@ -20,3 +23,13 @@ filterMapKeys f =
                     Nothing ->
                         identity
             )
+
+
+isJust : Maybe a -> Bool
+isJust m =
+    case m of
+        Nothing ->
+            False
+
+        _ ->
+            True
