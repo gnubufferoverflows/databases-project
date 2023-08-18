@@ -28,25 +28,28 @@ subqueries =
     Dict.fromList [ ( "veterinarians", Url.Builder.absolute ["api", "vets", "partial"] [] ) ]
 
 
-columns : List (Crud.Column Cat)
+columns : List (Crud.Column Int Cat)
 columns =
     [ { header = "Name"
-      , view = Crud.Projection (always "Haskell") Nothing
+      , view = Crud.Preset "Haskell"
+      }
+    , { header = "Id"
+      , view = Crud.Id String.fromInt
       }
     , { header = "Age"
-      , view = Crud.Projection (.age >> String.fromInt) <| Just ( "age", Crud.Input <| String.toInt >> EESE.isJust )
+      , view = Crud.Projection (.age >> String.fromInt) "age" <| Crud.Input <| String.toInt >> EESE.isJust
       }
     , { header = "Weight"
-      , view = Crud.Projection (.weight >> String.fromFloat) <| Just ( "weight", Crud.Input <| String.toFloat >> EESE.isJust )
+      , view = Crud.Projection (.weight >> String.fromFloat) "weight" <| Crud.Input <| String.toFloat >> EESE.isJust
       }
     , { header = "Registration Date"
-      , view = Crud.Projection .registrationDate <| Just ( "registrationDate", Crud.Date )
+      , view = Crud.Projection .registrationDate "registrationDate" Crud.Date
       }
     , { header = "Physical Description"
-      , view = Crud.Projection .physicalDescription <| Just ( "physicalDescription", Crud.TextArea )
+      , view = Crud.Projection .physicalDescription "physicalDescription" Crud.TextArea
       }
     , { header = "Veterinarian"
-      , view = Crud.Subquery "veterinarians" .veterinarianID <| Just "veterinarianID"
+      , view = Crud.Subquery "veterinarians" .veterinarianID "veterinarianID"
       }
     ]
 
@@ -72,7 +75,7 @@ encoder cat =
         ]
 
 
-main : Program () (Crud.Model Cat) (Crud.Msg Cat)
+main : Program () (Crud.Model Int Cat) (Crud.Msg Int Cat)
 main =
     Crud.app
         { read = primaryEndpoint
@@ -81,6 +84,9 @@ main =
         , delete = primaryEndpoint
         , subqueries = subqueries
         , columns = columns
-        , decoder = decoder
-        , encoder = encoder
+        , keyDecoder = Dec.int
+        , valueDecoder = decoder
+        , keyEncoder = Enc.int
+        , valueEncoder = encoder
+        , customizableIdValues = []
         }

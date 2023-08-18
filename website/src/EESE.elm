@@ -4,6 +4,7 @@
 module EESE exposing
     ( filterMapKeys
     , isJust
+    , guardMaybe
     )
 
 
@@ -33,3 +34,12 @@ isJust m =
 
         _ ->
             True
+
+
+guardMaybe : Bool -> Maybe a -> Maybe a
+guardMaybe p =
+    if p then
+        identity
+    else
+        always Nothing
+
