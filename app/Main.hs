@@ -12,10 +12,10 @@ import Control.Monad.Trans.Class
 import Data.String.Interpolate
 
 import Network.Wai
-import Network.HTTP.Types (status200)
+import Network.HTTP.Types (status200, status400, ok200)
 import Network.Wai.Handler.Warp (run)
 import Data.Binary.Builder
-import Data.ByteString (ByteString)
+import Data.ByteString (ByteString, fromStrict, toStrict)
 import Queries
 import Web.Scotty as S
 import Network.Wai.Middleware.Static
@@ -50,6 +50,55 @@ app' port = scotty port $ do
         catid <- param "id"
         results <- lift $ checkCatExistsQuery catid
         S.json $ results
+    S.get "/api/cats/:id" $ do
+        catid <- param "id"
+        results <- lift $ getCatQuery catid
+        S.json $ results
+    S.post "/api/adoption" $ do
+        b <- body
+        results <- lift $ createAdoptionQuery $ toStrict b
+        case results of
+          True -> S.status ok200
+          False -> do
+              S.status status400
+              S.text "JSON could not be parsed."
+    S.get "/api/owners/:id" $ do
+        ownerID <- param "id"
+        results <- lift $ getOwnerInfoQuery ownerID
+        S.json $ results
+    S.get "/api/haskells" $ do
+        results <- lift $ getHaskellsQuery
+        S.json $ results
+    S.get "/api/vets" $ do
+        results <- lift $ getVetsQueryFull
+        S.json $ results
+    S.get "/api/appointments" $ do
+        results <- lift $ getAppointmentsQuery
+        S.json $ results
+    S.patch "/api/cats/:id" $ do
+        b <- body
+        catID <- param "id"
+        results <- lift $ updateCatQuery (toStrict b) catID
+        case results of
+          True -> S.status ok200
+          False -> do
+              S.status status400
+              S.text "Invalid JSON"
+    S.delete "/api/vets/:id" $ do
+        catID <- param "id"
+        results <- lift $ deleteVetQuery catID
+        S.status ok200
+    S.post "/api/vets" $ do
+        b <- body
+        results <- lift $ createVetQuery $ toStrict b
+        case results of
+          True -> S.status ok200
+          False -> do
+              S.status status400
+              S.text "bad json"
+
+
+
 
 main :: IO ()
 main = do
