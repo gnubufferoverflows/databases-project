@@ -5,8 +5,7 @@
     <title>Haskell</title>
     <link rel="stylesheet" href="styles/sass/haskellcats.css">
     <script src="https://kit.fontawesome.com/37b71ea429.js" crossorigin="anonymous"></script>
-    <script src="modals.js"></script>
-    <script src="elm.js"></script>
+    <script src="index.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -28,8 +27,23 @@
                     &#x1F608; For Veterinarians Only &#x1F608;
                 </a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="cats.html">
-                        Cat Database
+                    <a class="navbar-item" href="Cats">
+                        Cats
+                    </a>
+                    <a class="navbar-item" href="Diseases">
+                        Diseases
+                    </a>
+                    <a class="navbar-item" href="Medications">
+                        Medications
+                    </a>
+                    <a class="navbar-item" href="Diagnoses">
+                        Diagnoses
+                    </a>
+                    <a class="navbar-item" href="Prescriptions">
+                        Prescriptions
+                    </a>
+                    <a class="navbar-item" href="Veterinarians">
+                        Veterinarians
                     </a>
                 </div>
             </div>
@@ -40,14 +54,7 @@
     </div>
 </nav>
 
-<section class="section">
-    <br>
-    <div id="catcards"></div>
+<section class="section" id="app">
 </section>
-<script>
-    const app = Elm.Main.init({
-        node: document.getElementById('catcards')
-    });
-</script>
 </body>
 </html>

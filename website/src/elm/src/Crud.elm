@@ -31,29 +31,37 @@
 
 
 module Crud exposing
-    ( Model
+    ( Flags
+    , Model
     , Msg
     , app
     , Column
     , Endpoint
     , CellView(..)
     , TextType(..)
+    , AppType
     )
 
 
 import Browser
 import Dict exposing (Dict)
-import EESE
-import EESE.Html as EvanHtml
-import EESE.Html.Aria as Aria
-import EESE.Http as EvanHttp
-import EESE.Json.Decode as EvanJsonDecoders
 import Html exposing (Html)
 import Html.Attributes as Attrs exposing (class, id, classList)
 import Html.Events as Events
 import Http
 import Json.Decode as Dec exposing (Decoder)
 import Json.Encode as Enc exposing (Value)
+
+
+import EESE
+import EESE.Html as EvanHtml
+import EESE.Html.Aria as Aria
+import EESE.Http as EvanHttp
+import EESE.Json.Decode as EvanJsonDecoders
+
+
+type alias Flags =
+    ()
 
 
 -- type to represent the state of the crud app
@@ -214,7 +222,7 @@ type alias InitStuff comparable a =
 
 
 -- initial state and loading side-effect
-init : InitStuff comparable a -> () -> ( Model comparable a, Cmd (Msg comparable a) )
+init : InitStuff comparable a -> Flags -> ( Model comparable a, Cmd (Msg comparable a) )
 init initstuff =
     always
         ( Dict.size initstuff.subqueries |> unloaded |> PartiallyLoaded
@@ -453,7 +461,7 @@ createCmd : Endpoint -> (a -> Value) -> Decoder comparable -> a -> Cmd (Msg comp
 createCmd endpoint encode decoder value = 
     Http.post
         { url = endpoint
-        , body = Http.jsonBody <| encode value
+        , body = Http.jsonBody <| Enc.object [ ( "value", encode value ) ]
         , expect = Http.expectJson (Created value) decoder
         }
 
@@ -614,27 +622,33 @@ type alias ViewStuff comparable a =
     { keyDecoder : Maybe (Decoder comparable)
     , valueDecoder : Decoder a
     , columns : UnzippedColumns comparable a
+    , title : String
     }
 
 
 -- function to determine what we will render
-view : ViewStuff comparable a -> Model comparable a -> Html (Msg comparable a)
+view : ViewStuff comparable a -> Model comparable a -> Browser.Document (Msg comparable a)
 view config model =
+    { title = config.title
+    , body = viewBody config model
+    }
+
+
+viewBody : ViewStuff comparable a -> Model comparable a -> List (Html (Msg comparable a))
     case model of
         PartiallyLoaded _ ->
-            Html.p [] [Html.text "PartiallyLoaded"]
+            [Html.p [] [Html.text "PartiallyLoaded"]]
 
         Error msg ->
-            Html.p [] [Html.text msg]
+            [Html.p [] [Html.text msg]]
 
         Loaded {subqueries, data, modifying} ->
-            Html.div []
-                [ creationButton
-                , makeTable config.columns.headers config.columns.views subqueries data
-                , modifying
-                    |> Maybe.map (makeModal config.keyDecoder config.valueDecoder)
-                    |> Maybe.withDefault EvanHtml.empty
-                ]
+            [ creationButton
+            , makeTable config.columns.headers config.columns.views subqueries data
+            , modifying
+                |> Maybe.map (makeModal config.keyDecoder config.valueDecoder)
+                |> Maybe.withDefault EvanHtml.empty
+            ]
 
 
 -- given the decoder, the list of headers, and the current modification status,
@@ -958,6 +972,14 @@ subscriptions =
     always Sub.none
 
 
+type alias AppType flags model msg =
+    { init : flags -> ( model, Cmd msg )
+    , view : model -> Browser.Document msg
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    }
+
+
 -- main function, and the primary export of this module
 app :
     { read : Endpoint
@@ -971,38 +993,39 @@ app :
     , keyEncoder : comparable -> Value
     , valueEncoder : a -> Value
     , customizableIdValues : List CustomizableIdValue
+    , title : String
     }
-    -> Program () (Model comparable a) (Msg comparable a)
+    -> AppType Flags (Model comparable a) (Msg comparable a)
 app config =
     let
         unzippedColumns = unzipColumns config.columns
     in
-        Browser.element
-            { init =
-                init
-                    { read = config.read
-                    , subqueries = config.subqueries
-                    , keyDecoder = config.keyDecoder
-                    , valueDecoder = config.valueDecoder
+        { init =
+            init
+                { read = config.read
+                , subqueries = config.subqueries
+                , keyDecoder = config.keyDecoder
+                , valueDecoder = config.valueDecoder
+                }
+        , view =
+            view
+                { keyDecoder =
+                    EESE.guardMaybe (not <| List.isEmpty config.customizableIdValues) <| Just config.keyDecoder
+                , valueDecoder = config.valueDecoder
+                , columns = unzippedColumns
+                , title = config.title
+                }
+        , update =
+            update
+                { endpoints =
+                    { create = config.create
+                    , update = config.edit
+                    , delete = config.delete
                     }
-            , view =
-                view
-                    { keyDecoder =
-                        EESE.guardMaybe (not <| List.isEmpty config.customizableIdValues) <| Just config.keyDecoder
-                    , valueDecoder = config.valueDecoder
-                    , columns = unzippedColumns
-                    }
-            , update =
-                update
-                    { endpoints =
-                        { create = config.create
-                        , update = config.edit
-                        , delete = config.delete
-                        }
-                    , columns = unzippedColumns
-                    , encoders = EncoderPair config.keyEncoder config.valueEncoder
-                    , keyDecoder = config.keyDecoder
-                    , customizableIdValues = config.customizableIdValues
-                    }
-            , subscriptions = subscriptions
-            }
+                , columns = unzippedColumns
+                , encoders = EncoderPair config.keyEncoder config.valueEncoder
+                , keyDecoder = config.keyDecoder
+                , customizableIdValues = config.customizableIdValues
+                }
+        , subscriptions = subscriptions
+        }

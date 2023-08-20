@@ -1,12 +1,26 @@
-module Pages.Cats exposing (main)
+-- the cat page
 
 
-import Crud
+module Pages.Cats exposing
+    ( Flags
+    , Model
+    , Msg
+    , init
+    , view
+    , update
+    , sub
+    )
+
+
+import Browser
 import Dict exposing (Dict)
-import EESE
 import Json.Decode as Dec exposing (Decoder)
 import Json.Encode as Enc exposing (Value)
 import Url.Builder
+
+
+import Crud
+import EESE
 
 
 type alias Cat =
@@ -16,6 +30,18 @@ type alias Cat =
     , age : Int
     , registrationDate : String
     }
+
+
+type alias Flags =
+    Crud.Flags
+
+
+type alias Model =
+    Crud.Model Int Cat
+
+
+type alias Msg =
+    Crud.Msg Int Cat
 
 
 primaryEndpoint : Crud.Endpoint
@@ -75,8 +101,8 @@ encoder cat =
         ]
 
 
-main : Program () (Crud.Model Int Cat) (Crud.Msg Int Cat)
-main =
+app : Crud.AppType Model Msg
+app =
     Crud.app
         { read = primaryEndpoint
         , create = primaryEndpoint
@@ -90,3 +116,23 @@ main =
         , valueEncoder = encoder
         , customizableIdValues = []
         }
+
+
+init : () -> ( Model, Cmd Msg )
+init =
+    app.init
+
+
+view : Model -> Browser.Document Msg
+view =
+    app.view
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update =
+    app.update
+
+
+subscriptions : Model -> Sub Msg
+subscriptions =
+    app.subscriptions
