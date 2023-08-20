@@ -1,6 +1,6 @@
-styles/node_modules/*
+node_modules
 elm-stuff
 elm.js
-dist-newstyle/
+dist-newstyle
 website/public/styles
 index.js
