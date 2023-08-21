@@ -1,7 +1,141 @@
--- the main page, that displays all of the funny cat cards and allows you to view and adopt individual cats
+-- the main page, that displays all of the funny cat cards
 
 
 module Pages.Home exposing
-    ( Model
+    ( Flags
+    , Model
     , Msg
-    , 
+    , init
+    , view
+    , update
+    , subscriptions
+    )
+
+
+import Browser
+import Html exposing (Html)
+import Html.Attributes exposing (class)
+import Html.Events
+import Http
+import Json.Decode
+import Url.Builder
+
+
+import EESE
+import EESE.Html
+import EESE.Http
+import EESE.Json.Decode
+
+
+type alias Flags =
+    ()
+
+
+type alias Model =
+    = Loading
+    | Error String
+    | CatCards (List CatCard)
+
+
+type alias CatCard =
+    { id : Int
+    , imageUrl : String
+    }
+
+
+type alias Fields =
+    Dict String String
+
+
+type Msg
+    = GotCatCards (Result Http.Error CatCard)
+
+
+init : Flags -> ( Model, Cmd Msg )
+init =
+    always ( Loading, loadCatCards )
+
+
+catCardEndpoint : String
+catCardEndpoint =
+    Url.Builder.absolute ["api", "cats"] []
+
+
+loadCatCards : Cmd Msg
+loadCatCards =
+    Http.get
+        { url = catCardEndpoint
+        , expect = Http.jsonBody GotCatCards <| Json.Decode.list decodeCatCard
+        }
+
+
+decodeCatCard : Decoder CatCard
+decodeCatCard =
+    Json.Decode.map (EESE.uncurry CatCard)
+        <| EESE.Json.Decode.tuple
+            Json.Decode.int <|
+            Json.Decode.field "imageURL" Json.Decode.string
+
+
+view : Model -> Browser.Document Msg
+view model =
+    { title = "Adopt A Haskell"
+    , body = viewBody model
+    }
+
+
+viewBody : Model -> List (Html Msg)
+viewBody model =
+    case model of
+        Loading ->
+            [EESE.Html.empty]
+
+        Error msg ->
+            [Html.p [] [Html.text msg]]
+            
+        CatCards cards ->
+            adoptAllHaskellsButton
+                :: 
+                    (
+                        cards
+                            |> List.map viewCatCard
+                    )
+
+
+adoptAllHaskellsButton :: Html Msg
+adoptAllHaskellsButton =
+    Html.a
+        [ class "button"
+        , Html.Attributes.href <| Url.Builder.absolute ["adopt", "all"] []:w
+        ]
+        [Html.text "Adopt All Haskells"]
+
+
+viewCatCard : CatCard -> Html Msg
+viewCatCard card =
+    Html.div
+        [ class "tile"
+        , class "is-ancestor"
+        ]
+        [ Html.div [class "tile", class "is-parent"]
+            [ Html.article [class "tile", class "is-child" class "box"]
+                [ Html.p [class "title"] [Html.text "Haskell"]
+                , Html.figure [class "image"]
+                    [Html.img [Html.Attribute.src card.imageUrl] []]
+                , Html.a [Html.Attributes.href <| Url.Builder.absolute ["cats", String.fromInt card.id] []]
+                    [Html.text "Learn more"]
+                ]
+            ]
+        ]
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        GotCats result ->
+            case result of
+                Err e ->
+                    Error <| EESE.Http.httpErrorToString e
+
+                Ok cats ->
+                    CatCard cats

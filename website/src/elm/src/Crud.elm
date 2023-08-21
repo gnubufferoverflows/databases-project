@@ -637,7 +637,7 @@ view config model =
 viewBody : ViewStuff comparable a -> Model comparable a -> List (Html (Msg comparable a))
     case model of
         PartiallyLoaded _ ->
-            [Html.p [] [Html.text "PartiallyLoaded"]]
+            [EvanHtml.empty]
 
         Error msg ->
             [Html.p [] [Html.text msg]]
