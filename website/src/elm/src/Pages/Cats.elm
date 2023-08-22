@@ -8,7 +8,7 @@ module Pages.Cats exposing
     , init
     , view
     , update
-    , sub
+    , subscriptions
     )
 
 
@@ -101,7 +101,12 @@ encoder cat =
         ]
 
 
-app : Crud.AppType Model Msg
+title : String
+title =
+    "Cats"
+
+
+app : Crud.AppType Flags Model Msg
 app =
     Crud.app
         { read = primaryEndpoint
@@ -115,6 +120,7 @@ app =
         , keyEncoder = Enc.int
         , valueEncoder = encoder
         , customizableIdValues = []
+        , title = title
         }
 
 

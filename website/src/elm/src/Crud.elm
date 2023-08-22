@@ -39,6 +39,7 @@ module Crud exposing
     , Endpoint
     , CellView(..)
     , TextType(..)
+    , CustomizableIdValue
     , AppType
     )
 
@@ -635,6 +636,7 @@ view config model =
 
 
 viewBody : ViewStuff comparable a -> Model comparable a -> List (Html (Msg comparable a))
+viewBody config model =
     case model of
         PartiallyLoaded _ ->
             [EvanHtml.empty]

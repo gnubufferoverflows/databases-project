@@ -7,15 +7,18 @@ module Main exposing (main)
 
 
 import Browser
+import Browser.Navigation as Nav
 import Url exposing (Url)
 
 
 import EESE
+import EESE.Browser
 import Route
 
 
 import Pages.Home as Home
 import Pages.Cats as Cats
+import Pages.Diagnoses as Diagnoses
 
 
 type alias Flags =
@@ -34,7 +37,7 @@ type Page
     | Diagnoses Diagnoses.Model
 
 
-type alias Msg
+type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url
     | Foreign Foreign
@@ -53,26 +56,25 @@ init _ _ key =
             Home.init ()
     in
         ( { key = key
-          , initModel = Home initModel
+          , page = Home initModel
           }
-        , initCmd
+        , Cmd.map (Foreign << HomeMsg) initCmd
         )
 
 
 -- pretty boilerplatey
-view : Model -> Document Msg
+view : Model -> Browser.Document Msg
 view model =
-    EESE.uncurry EESE.Browser.mapDocument
-        <| Tuple.mapFirst ((<<) Foreign)
-        <| case model.page of
-            Home hm ->
-                ( HomeMsg, Home.view hm )
+    case model.page of
+        Home hm ->
+            EESE.Browser.mapDocument (Foreign << HomeMsg) <| Home.view hm
 
-            Cats cm ->
-                ( CatsMsg, Cats.view cm )
+        Cats cm ->
+            EESE.Browser.mapDocument (Foreign << CatsMsg) <| Cats.view cm
 
-            Diagnoses dm ->
-                ( DiagnosesMsg, Diagnoses.view dm )
+        Diagnoses dm ->
+            EESE.Browser.mapDocument (Foreign << DiagnosesMsg) <| Diagnoses.view dm
+
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -87,22 +89,35 @@ update msg model =
                     ( model, Nav.load url )
 
         UrlChanged url ->
-            let
-                ( page, pageInit ) =
-                    case Route.fromUrl url of
+            case Route.fromUrl url of
+                Just route ->
+                    case route of
                         Route.Home ->
-                            ( Home, HomeMsg, Home.init () )
+                            start Home HomeMsg (Home.init ()) model
 
                         Route.Cats ->
-                            ( Cats, CatsMsg, Cats.init () )
+                            start Cats CatsMsg (Cats.init ()) model
 
                         Route.Diagnoses ->
-                            ( Diagnoses, DiagnosesMsg, Diagnoses.init () )
-            in
-                model |>
-                    start page pageInit
+                            start Diagnoses DiagnosesMsg (Diagnoses.init ()) model
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         Foreign fmsg ->
+            case ( fmsg, model.page ) of
+                ( HomeMsg hmsg, Home hm ) ->
+                    handleForeignMsg Home HomeMsg Home.update hmsg hm model
+
+                ( CatsMsg cmsg, Cats cm ) ->
+                    handleForeignMsg Cats CatsMsg Cats.update cmsg cm model
+
+                ( DiagnosesMsg dmsg, Diagnoses dm ) ->
+                    handleForeignMsg Diagnoses DiagnosesMsg Diagnoses.update dmsg dm model
+
+                -- Cringe Elm moment
+                _ ->
+                    ( model, Cmd.none )
 
 
 handleForeignMsg :
@@ -113,17 +128,22 @@ handleForeignMsg :
     -> model
     -> Model
     -> ( Model, Cmd Msg )
-handleForeignMsg page msg update fmsg fmodel model =
-    start page msg (update fmsg fmodel) model
+handleForeignMsg page msg updateFn fmsg fmodel model =
+    start page msg (updateFn fmsg fmodel) model
 
 
-start : (model -> Page) -> (msg -> Msg) -> ( model, Cmd msg ) -> Model -> ( Model, Cmd Msg )
+start : (model -> Page) -> (msg -> Foreign) -> ( model, Cmd msg ) -> Model -> ( Model, Cmd Msg )
 start page msg ( newModel, cmd ) model =
     ( { model
       | page = page newModel
       }
-    , Cmd.map msg cmd
+    , Cmd.map (Foreign << msg) cmd
     )
+
+
+subscriptions : Model -> Sub msg
+subscriptions =
+    always Sub.none
 
 
 main : Program Flags Model Msg

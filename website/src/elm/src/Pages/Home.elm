@@ -17,7 +17,7 @@ import Html exposing (Html)
 import Html.Attributes exposing (class)
 import Html.Events
 import Http
-import Json.Decode
+import Json.Decode exposing (Decoder)
 import Url.Builder
 
 
@@ -31,7 +31,7 @@ type alias Flags =
     ()
 
 
-type alias Model =
+type Model
     = Loading
     | Error String
     | CatCards (List CatCard)
@@ -43,12 +43,8 @@ type alias CatCard =
     }
 
 
-type alias Fields =
-    Dict String String
-
-
 type Msg
-    = GotCatCards (Result Http.Error CatCard)
+    = GotCatCards (Result Http.Error (List CatCard))
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -65,7 +61,7 @@ loadCatCards : Cmd Msg
 loadCatCards =
     Http.get
         { url = catCardEndpoint
-        , expect = Http.jsonBody GotCatCards <| Json.Decode.list decodeCatCard
+        , expect = Http.expectJson GotCatCards <| Json.Decode.list decodeCatCard
         }
 
 
@@ -102,11 +98,11 @@ viewBody model =
                     )
 
 
-adoptAllHaskellsButton :: Html Msg
+adoptAllHaskellsButton : Html Msg
 adoptAllHaskellsButton =
     Html.a
         [ class "button"
-        , Html.Attributes.href <| Url.Builder.absolute ["adopt", "all"] []:w
+        , Html.Attributes.href <| Url.Builder.absolute ["adopt", "all"] []
         ]
         [Html.text "Adopt All Haskells"]
 
@@ -118,10 +114,10 @@ viewCatCard card =
         , class "is-ancestor"
         ]
         [ Html.div [class "tile", class "is-parent"]
-            [ Html.article [class "tile", class "is-child" class "box"]
+            [ Html.article [class "tile", class "is-child", class "box"]
                 [ Html.p [class "title"] [Html.text "Haskell"]
                 , Html.figure [class "image"]
-                    [Html.img [Html.Attribute.src card.imageUrl] []]
+                    [Html.img [Html.Attributes.src card.imageUrl] []]
                 , Html.a [Html.Attributes.href <| Url.Builder.absolute ["cats", String.fromInt card.id] []]
                     [Html.text "Learn more"]
                 ]
@@ -132,10 +128,15 @@ viewCatCard card =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotCats result ->
+        GotCatCards result ->
             case result of
                 Err e ->
-                    Error <| EESE.Http.httpErrorToString e
+                    ( Error <| EESE.Http.httpErrorToString e, Cmd.none )
 
                 Ok cats ->
-                    CatCard cats
+                    ( CatCards cats, Cmd.none )
+
+
+subscriptions : Model -> Sub msg
+subscriptions =
+    always Sub.none
