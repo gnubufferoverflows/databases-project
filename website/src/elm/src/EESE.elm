@@ -5,6 +5,7 @@ module EESE exposing
     ( filterMapKeys
     , isJust
     , guardMaybe
+    , uncurry
     )
 
 
@@ -43,3 +44,7 @@ guardMaybe p =
     else
         always Nothing
 
+
+uncurry : (a -> b -> c) -> ( a, b ) -> c
+uncurry f ( x, y ) =
+    f x y
